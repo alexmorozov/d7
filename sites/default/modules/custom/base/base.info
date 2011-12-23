@@ -1,0 +1,5 @@
+name = Base settings
+description = Базовые настройки сайтa
+core = 7.x
+
+files[] = base.module

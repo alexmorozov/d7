@@ -1,0 +1,87 @@
+<?php
+
+/**
+ * Implementation of hook_install().
+ */
+function base_install() {
+  base_update_modules();
+  base_update_locale();
+  base_update_user_settings();
+}
+
+/**
+ * Включить/выключить нужные модули
+ */
+function base_update_modules() {
+  $disable = array(
+    'color',
+    'comment',
+    'dblog',
+    'help',
+    'search',
+  );
+  module_disable($disable);
+
+  $enable = array(
+    'locale',
+    'varnish',
+    'ctools',
+    'context_ui',
+    'date_popup', 'date_views',
+    'devel',
+    'features',
+    'metatag_ui',
+    //'globalredirect', // выключено, пока не решится http://drupal.org/node/1034126
+    'libraries',
+    'pathauto',
+    'strongarm',
+    'rules_admin',
+    'page_title',
+    'googleanalytics',
+    'wysiwyg', 'imce_wysiwyg',
+    'views_ui',
+    'webform',
+    'l10n_update',
+  );
+  module_enable($enable);
+}
+
+/**
+ * Настройки пользователей
+ */
+function base_update_user_settings() {
+  // Отключим регистрацию новых пользователей.
+  variable_set('user_register', 0);
+}
+
+/**
+ * Настройки локализации
+ */
+function base_update_locale() {
+  // Сначала установим параметры определения языка
+  $all_methods = language_negotiation_info();
+  $method_weights = array(
+    4 => LOCALE_LANGUAGE_NEGOTIATION_USER,
+    6 => LOCALE_LANGUAGE_NEGOTIATION_BROWSER,
+    10 => LANGUAGE_NEGOTIATION_DEFAULT,
+  );
+  $negotiation = array();
+
+  foreach ($method_weights as $weight => $id) {
+    $negotation[$id] = $methods[$id];
+    $negotation[$id]['weight'] = $weight;
+  }
+  language_negotiation_set(LANGUAGE_TYPE_INTERFACE, $negotation);
+
+  // Теперь создадим русскую локаль
+  $langcode = 'ru';
+  locale_add_language($langcode, NULL, NULL, LANGUAGE_LTR, '', '', TRUE, TRUE);
+  // Подгрузим файлы с переводами
+  module_load_include('check.inc', 'l10n_update');
+  l10n_update_language_refresh(array($langcode));
+
+  // Для админа оставим английскую локаль
+  $admin = user_load(1);
+  $admin->language = 'en';
+  user_save($admin);
+}
