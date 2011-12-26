@@ -7,6 +7,10 @@ function base_install() {
   base_update_modules();
   base_update_locale();
   base_update_user_settings();
+  base_update_datetime();
+  base_update_blocks();
+  base_update_misc();
+  base_update_features();
 }
 
 /**
@@ -52,6 +56,16 @@ function base_update_modules() {
 function base_update_user_settings() {
   // Отключим регистрацию новых пользователей.
   variable_set('user_register', 0);
+
+  // Добавим роли
+  $new_roles = array('power user');
+  foreach ($new_roles as $r){
+    if(!user_role_load_by_name($r)){
+      $role = new stdClass();
+      $role->name = $r;
+      user_role_save($role);
+    }
+  }
 }
 
 /**
@@ -84,4 +98,57 @@ function base_update_locale() {
   $admin = user_load(1);
   $admin->language = 'en';
   user_save($admin);
+
+  variable_set('site_default_country', 'RU');
+}
+
+/**
+ * Настройки даты и времени на сайте
+ */
+function base_update_datetime() {
+  variable_set('date_first_day', 1); // Понедельник - первый день недели
+  variable_set('date_default_timezone', 'Europe/Moscow');
+
+  locale_date_format_save('ru', 'short', 'd.m.y');
+  locale_date_format_save('ru', 'medium', 'd.m.Y');
+  locale_date_format_save('ru', 'long', 'd.m.Y H:i:s');
+}
+
+/**
+ * Настройки блоков
+ */
+function base_update_blocks() {
+  // Уберем ненужные блоки
+  db_update('block')
+    ->condition('delta', array('form', 'login', 'navigation', 'powered-by'), 'IN')
+    ->condition(db_and()->condition('theme', 'bartik'))
+    ->fields(array('region' => -1,))
+    ->execute();
+}
+
+/**
+ * Различные настройки
+ */
+function base_update_misc() {
+  // Общий ключ для запуска cron
+  variable_set('cron_key', 'cron_key');
+
+  // Удалим тип страниц "Статья"
+  db_delete('node_type')
+    ->condition('type', 'article')
+    ->execute();
+
+  // Разрешим продвинутым пользователям доступ к full-html редактору
+  $power_user_rid = user_role_load_by_name('power user');
+  user_role_grant_permissions($power_user_rid, array('use text format full_html'));
+}
+
+/**
+ * Включить модули features
+ */
+function base_update_features() {
+  $features = array(
+    'wysiwyg_profiles',
+  );
+  module_enable($features, TRUE);
 }
