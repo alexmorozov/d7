@@ -66,6 +66,32 @@ function base_update_user_settings() {
       user_role_save($role);
     }
   }
+
+  // Права для продвинутых пользователей
+  $power_user = user_role_load_by_name('power user');
+  $permissions = array(
+    'administer blocks',
+    'access contextual links',
+    'access dashboard',
+    'administer menu',
+    'edit meta tags',
+    'administer nodes',
+    'access content overview',
+    'view own unpublished content',
+    'create page content',
+    'edit any page content',
+    'delete any page content',
+    'access overlay',
+    'set page title',
+    'create url aliases',
+    'access site in maintenance mode',
+    'view the administration theme',
+    'administer taxonomy',
+    'access toolbar',
+    'access all webform results',
+    'use text format full_html',
+  );
+  user_role_grant_permissions($power_user->rid, $permissions);
 }
 
 /**
@@ -137,10 +163,6 @@ function base_update_misc() {
   db_delete('node_type')
     ->condition('type', 'article')
     ->execute();
-
-  // Разрешим продвинутым пользователям доступ к full-html редактору
-  $power_user_rid = user_role_load_by_name('power user');
-  user_role_grant_permissions($power_user_rid, array('use text format full_html'));
 }
 
 /**
