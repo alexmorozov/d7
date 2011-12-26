@@ -74,6 +74,7 @@ function wysiwyg_profiles_wysiwyg_default_profiles() {
           'Redo' => 1,
           'Link' => 1,
           'Unlink' => 1,
+          'Image' => 1,
           'Superscript' => 1,
           'Subscript' => 1,
           'Blockquote' => 1,
